@@ -11,7 +11,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
-  final List<String> _notes = [];
+  final List<Map<String, dynamic>> _notes = [];
   final DBHelper _dbHelper = DBHelper();
 
   void _addNote() async {
@@ -27,9 +27,71 @@ class _HomePageState extends State<HomePage> {
   final data = await _dbHelper.getNotes();
   setState(() {
     _notes.clear();
-    _notes.addAll(data.map((item) => item['content'] as String));
+    _notes.addAll(data);
   });
   }
+
+  void _showEditDialog(Map<String, dynamic> note) {
+    final editController = TextEditingController(text: note['content']);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit Note'),
+        content: TextField(
+          controller: editController,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            hintText: 'Edit your note...',
+          ),
+          maxLines: null,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final updatedText = editController.text.trim();
+              if (updatedText.isNotEmpty) {
+                await _dbHelper.updateNote(note['id'], updatedText);
+                _loadNotes();
+              }
+              Navigator.pop(context);
+            },
+            child: Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(int id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete Note'),
+        content: Text('Are you sure you want to delete this note?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _dbHelper.deleteNote(id);
+              _loadNotes();
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            child: Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   @override
   void initState() {
@@ -68,21 +130,35 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )
                   : ListView.builder(
-                      reverse: true,
-                      itemCount: _notes.length,
-                      itemBuilder: (context, index) {
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 6),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text(
-                              _notes[index],
-                              style: TextStyle(fontSize: 16),
-                            ),
+                    reverse: true,
+                    itemCount: _notes.length,
+                    itemBuilder: (context, index) {
+                      final note = _notes[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        child: ListTile(
+                          title: Text(note['content'], style: TextStyle(fontSize: 16)),
+                          subtitle: Text(
+                            note['date'],
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
                           ),
-                        );
-                      },
-                    ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit, color: Colors.blueAccent),
+                                onPressed: () => _showEditDialog(note),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.redAccent),
+                                onPressed: () => _confirmDelete(note['id']),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
             ),
           ],
         ),
