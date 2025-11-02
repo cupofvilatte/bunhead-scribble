@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'data/ballet_steps.dart';
 
 class DBHelper {
   static Database? _db;
@@ -17,7 +18,7 @@ class DBHelper {
     final path = join(dbPath, 'bunhead_scribble.db');
     return await openDatabase(
       path,
-      version: 2, // bump version to ensure new table is created
+      version: 4, // bump version to ensure new table is created
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE notes(
@@ -34,6 +35,27 @@ class DBHelper {
             description TEXT
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE choreography(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content TEXT,
+            date TEXT
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE steps(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            category TEXT
+          )
+        ''');
+
+        for (var step in balletStepsData) {
+          await db.insert('steps', step);
+        }
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         // Create events table if upgrading from version 1
@@ -43,6 +65,27 @@ class DBHelper {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               date TEXT,
               description TEXT
+            )
+          ''');
+        }
+
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE choreography(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              content TEXT,
+              date TEXT
+            )
+          ''');
+        }
+
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE steps(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              description TEXT,
+              category TEXT
             )
           ''');
         }
@@ -102,5 +145,58 @@ class DBHelper {
   Future<void> deleteEvent(int id) async {
     final db = await database;
     await db.delete('events', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ---------------- CHOREOGRAPHY ----------------
+
+  // Insert choreography note
+  Future<void> insertChoreo(String content) async {
+    final db = await database;
+    await db.insert('choreography', {
+      'content': content,
+      'date': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Get choreography notes
+  Future<List<Map<String, dynamic>>> getChoreoNotes() async {
+    final db = await database;
+    return await db.query('choreography', orderBy: 'date DESC');
+  }
+
+  // Update choreography note
+  Future<void> updateChoreo(int id, String newContent) async {
+    final db = await database;
+    await db.update(
+      'choreography',
+      {'content': newContent, 'date': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // Delete choreography note
+  Future<void> deleteChoreo(int id) async {
+    final db = await database;
+    await db.delete('choreography', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ---------------- STEPS ----------------
+
+  // Search ballet steps by name or category
+  Future<List<Map<String, dynamic>>> searchSteps(String query) async {
+    final db = await database;
+    return await db.query(
+      'steps',
+      where: 'name LIKE ? OR category LIKE ?',
+      whereArgs: ['%$query%', '%$query%'],
+      orderBy: 'name ASC',
+    );
+  }
+
+  // Get all steps (if you want to load everything at once)
+  Future<List<Map<String, dynamic>>> getAllSteps() async {
+    final db = await database;
+    return await db.query('steps', orderBy: 'name ASC');
   }
 }
