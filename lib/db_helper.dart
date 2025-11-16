@@ -199,4 +199,19 @@ class DBHelper {
     final db = await database;
     return await db.query('steps', orderBy: 'name ASC');
   }
+
+  Future<void> seedStepsIfEmpty() async {
+    final db = await database;
+    final count = Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM steps'));
+    
+    if (count == 0) {
+      for (var step in balletStepsData) {
+        await db.insert('steps', step);
+      }
+      print('✅ Seeded ${balletStepsData.length} ballet steps into the database.');
+    } else {
+      print('ℹ️ Steps already exist ($count entries).');
+    }
+  }
+
 }

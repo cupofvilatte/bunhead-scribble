@@ -14,6 +14,9 @@ class _HomePageState extends State<HomePage> {
   final List<Map<String, dynamic>> _notes = [];
   final DBHelper _dbHelper = DBHelper();
 
+  String _sortOrder = 'newest'; // or 'oldest'
+  DateTimeRange? _dateFilter;
+
   void _addNote() async {
     final text = _controller.text.trim();
     if (text.isNotEmpty) {
@@ -92,6 +95,72 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _applyFilters() {
+    setState(() {
+      // Sort notes
+      if (_sortOrder == 'newest') {
+        _notes.sort((a, b) => b['id'].compareTo(a['id']));
+      } else {
+        _notes.sort((a, b) => a['id'].compareTo(b['id']));
+      }
+
+      // Filter by date range (if selected)
+      if (_dateFilter != null) {
+        _notes.retainWhere((note) {
+          final date = DateTime.tryParse(note['date']);
+          return date != null &&
+              date.isAfter(_dateFilter!.start.subtract(const Duration(days: 1))) &&
+              date.isBefore(_dateFilter!.end.add(const Duration(days: 1)));
+        });
+      }
+    });
+  }
+
+  void _showSortOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            title: const Text('Newest first'),
+            onTap: () {
+              _sortOrder = 'newest';
+              _applyFilters();
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            title: const Text('Oldest first'),
+            onTap: () {
+              _sortOrder = 'oldest';
+              _applyFilters();
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showDateFilter() async {
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() => _dateFilter = picked);
+      _applyFilters();
+    }
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _dateFilter = null;
+      _loadNotes();
+    });
+  }
 
   @override
   void initState() {
@@ -121,6 +190,29 @@ class _HomePageState extends State<HomePage> {
             SizedBox(height: 12),
             ElevatedButton(onPressed: _addNote, child: Text('Save Note')),
             SizedBox(height: 12),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _showSortOptions,
+                  icon: const Icon(Icons.sort),
+                  label: Text('Sort (${_sortOrder == 'newest' ? 'Newest' : 'Oldest'})'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _showDateFilter,
+                  icon: const Icon(Icons.filter_alt),
+                  label: const Text('Filter'),
+                ),
+                if (_dateFilter != null)
+                  IconButton(
+                    onPressed: _clearFilters,
+                    icon: const Icon(Icons.clear, color: Colors.redAccent),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
             Expanded(
               child: _notes.isEmpty
                   ? Center(
@@ -130,7 +222,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )
                   : ListView.builder(
-                    reverse: true,
+                    reverse: false,
                     itemCount: _notes.length,
                     itemBuilder: (context, index) {
                       final note = _notes[index];

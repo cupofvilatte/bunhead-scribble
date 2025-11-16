@@ -54,6 +54,8 @@ class _ChoreographyPageState extends State<ChoreographyPage> {
   void initState() {
     super.initState();
     _loadChoreoNotes();
+    _dbHelper.seedStepsIfEmpty();
+    _checkSteps();
   }
 
   void _showEditDialog(Map<String, dynamic> note) {
@@ -228,4 +230,15 @@ class _ChoreographyPageState extends State<ChoreographyPage> {
       },
     );
   }
+
+  Future<void> _checkSteps() async {
+    final db = await _dbHelper.database;
+    final result = await db.query('steps');
+    print('🩰 Steps in database: ${result.length}');
+    for (var row in result) {
+      print(row);
+    }
+  }
+
+
 }
