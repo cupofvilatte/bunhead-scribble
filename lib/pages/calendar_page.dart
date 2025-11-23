@@ -16,17 +16,29 @@ class _CalendarPageState extends State<CalendarPage> {
 
   final DBHelper _dbHelper = DBHelper();
   final TextEditingController _eventController = TextEditingController();
+
   List<Map<String, dynamic>> _eventsForSelectedDay = [];
+  Map<String, List<Map<String, dynamic>>> _allEvents = {};
+
 
   @override
   void initState() {
     super.initState();
     _focusedDay = DateTime.now();
     _selectedDay = _focusedDay;
+
+    _loadAllEvents();
     _loadEventsForDay(_selectedDay);
   }
 
   String _formatDate(DateTime date) => DateFormat('yyyy-MM-dd').format(date);
+
+  Future<void> _loadAllEvents() async {
+    final events = await _dbHelper.getAllEventsGrouped();
+    setState(() {
+      _allEvents = events;
+    });
+  }
 
   Future<void> _loadEventsForDay(DateTime day) async {
     final date = _formatDate(day);
@@ -69,6 +81,31 @@ class _CalendarPageState extends State<CalendarPage> {
               });
               _loadEventsForDay(selectedDay);
             },
+            eventLoader: (day) {
+              final key = _formatDate(day);
+              return _allEvents[key] ?? [];
+            },
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, day, events) {
+                if (events.isEmpty) return null;
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: events.take(3).map((event) {
+                    final e = event as Map<String, dynamic>?;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 1.5),
+                      child: Text(
+                        "• ${(e?['description'] ?? '').toString()}",
+                        style: const TextStyle(fontSize: 9, color: Colors.black87),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
             calendarStyle: const CalendarStyle(
               todayDecoration: BoxDecoration(
                 color: Colors.pinkAccent,
