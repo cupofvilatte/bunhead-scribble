@@ -193,6 +193,22 @@ class DBHelper {
     await db.delete('events', where: 'id = ?', whereArgs: [id]);
   }
 
+  // Get Events by Date
+  Future<Map<String, List<Map<String, dynamic>>>> getAllEventsGrouped() async {
+    final db = await database;
+    final rows = await db.query('events');
+
+    final Map<String, List<Map<String, dynamic>>> grouped = {};
+
+    for (var row in rows) {
+      grouped.putIfAbsent(row['date'] as String, () => []);
+      grouped[row['date'] as String]!.add(row);
+    }
+
+    return grouped;
+  }
+
+
   // ---------------- CHOREOGRAPHY ----------------
 
   // Insert choreography note
