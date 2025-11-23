@@ -17,6 +17,27 @@ class _ChoreographyPageState extends State<ChoreographyPage> {
 
   final DBHelper _dbHelper = DBHelper();
 
+  final FocusNode _focusNode = FocusNode();
+
+  void _insertStepAtCursor(String step) {
+    final text = _controller.text;
+    final selection = _controller.selection;
+
+    final newText = text.replaceRange(
+      selection.start,
+      selection.end,
+      step,
+    );
+
+    final newCursorPosition = selection.start + step.length;
+
+    _controller.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newCursorPosition),
+    );
+  }
+
+
   Future<void> _loadChoreoNotes() async {
     // final db = await _dbHelper.database;
     final data = await _dbHelper.getChoreoNotes();
@@ -225,6 +246,17 @@ class _ChoreographyPageState extends State<ChoreographyPage> {
             title: Text(step['name']),
             subtitle: Text('${step['category']}\n${step['description']}'),
             isThreeLine: true,
+
+            onTap: () {
+              _insertStepAtCursor(step['name']);
+
+              setState(() {
+                _searchController.clear();
+                _searchResults.clear();
+              });
+
+              FocusScope.of(context).requestFocus(_focusNode);
+            }
           ),
         );
       },
