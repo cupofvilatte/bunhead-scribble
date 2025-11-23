@@ -450,7 +450,7 @@ void _showCombinedFilterDialog() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Bunhead Scribble')),
+      appBar: AppBar(title: Text('Journal Page')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
