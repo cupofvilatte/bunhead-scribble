@@ -245,55 +245,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showTagFilterDialog() async {
-    final allTags = await _dbHelper.getAllTags();
-    final selected = Set<String>.from(_tagFilter);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Filter by Tags'),
-        content: SingleChildScrollView(
-          child: Wrap(
-            spacing: 8,
-            children: allTags.map((tag) {
-              return FilterChip(
-                label: Text(tag),
-                selected: selected.contains(tag),
-                onSelected: (value) {
-                  setState(() {
-                    if (value) {
-                      selected.add(tag);
-                    } else {
-                      selected.remove(tag);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _tagFilter = selected.toList();
-                _applyFilters(); // refresh notes
-              });
-              Navigator.pop(context);
-            },
-            child: Text('Apply'),
-          ),
-        ],
-      ),
-    );
-  }
-
-
   void _applyFilters() {
     // Work from the master list so we never permanently remove items
     List<Map<String, dynamic>> filtered = List<Map<String, dynamic>>.from(_allNotes);
