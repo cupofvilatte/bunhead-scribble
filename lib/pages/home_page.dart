@@ -10,6 +10,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _controller = TextEditingController();
+  final List<Map<String, dynamic>> _allNotes = [];
   final List<Map<String, dynamic>> _notes = [];
   final DBHelper _dbHelper = DBHelper();
 
@@ -40,9 +41,16 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadNotes() async {
     final data = await _dbHelper.getNotes();
     setState(() {
-      _notes.clear();
-      _notes.addAll(data);
+      _allNotes
+        ..clear()
+        ..addAll(data);
+
+      _notes
+        ..clear()
+        ..addAll(_allNotes);
     });
+
+    _applyFilters();
   }
 
   void _showEditDialog(Map<String, dynamic> note) async {
@@ -287,36 +295,49 @@ class _HomePageState extends State<HomePage> {
 
 
   void _applyFilters() {
-    setState(() {
-      // Sort notes
+    // Work from the master list so we never permanently remove items
+    List<Map<String, dynamic>> filtered = List<Map<String, dynamic>>.from(_allNotes);
+
+    // Filter by date range (if selected)
+    if (_dateFilter != null) {
+      filtered = filtered.where((note) {
+        final date = DateTime.tryParse(note['date'] ?? '');
+        if (date == null) return false;
+        final start = _dateFilter!.start;
+        final end = _dateFilter!.end;
+        return !date.isBefore(start) && !date.isAfter(end);
+      }).toList();
+    }
+
+    // Filter by tags
+    if (_tagFilter.isNotEmpty) {
+      filtered = filtered.where((note) {
+        final noteTags = List<String>.from(note['tags'] ?? []);
+        // keep note if it has ANY of the selected tags
+        return _tagFilter.any((tag) => noteTags.contains(tag));
+      }).toList();
+    }
+
+    // Sort notes (use date ISO string so it works even when IDs don't reflect chronology)
+    filtered.sort((a, b) {
+      // parse date; fallback to 0 if parse fails
+      final da = DateTime.tryParse(a['date'] ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final db = DateTime.tryParse(b['date'] ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
       if (_sortOrder == 'newest') {
-        _notes.sort((a, b) => b['id'].compareTo(a['id']));
+        return db.compareTo(da);
       } else {
-        _notes.sort((a, b) => a['id'].compareTo(b['id']));
-      }
-
-      // Filter by date range (if selected)
-      if (_dateFilter != null) {
-        _notes.retainWhere((note) {
-          final date = DateTime.tryParse(note['date']);
-          return date != null &&
-              date.isAfter(
-                _dateFilter!.start.subtract(const Duration(days: 1)),
-              ) &&
-              date.isBefore(_dateFilter!.end.add(const Duration(days: 1)));
-        });
-      }
-
-      // Filter by tags
-      if (_tagFilter.isNotEmpty) {
-        _notes.retainWhere((note) {
-          final noteTags = List<String>.from(note['tags'] ?? []);
-          // Keep note if it has any of the selected tags
-          return _tagFilter.any((tag) => noteTags.contains(tag));
-        });
+        return da.compareTo(db);
       }
     });
+
+    // Update visible notes in one setState
+    setState(() {
+      _notes
+        ..clear()
+        ..addAll(filtered);
+    });
   }
+
 
   void _showSortOptions() {
     showModalBottomSheet(
@@ -437,8 +458,12 @@ void _showCombinedFilterDialog() async {
     setState(() {
       _dateFilter = null;
       _tagFilter.clear();
-      _loadNotes();
+      
+      _notes
+        ..clear()
+        ..addAll(_allNotes);
     });
+    _applyFilters();
   }
 
   @override
