@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'theme/app_colors.dart';
+
 import 'pages/home_page.dart';
 import 'pages/calendar_page.dart';
 import 'pages/choreography_page.dart';
@@ -28,22 +31,41 @@ class _BunheadScribbleAppState extends State<BunheadScribbleApp> {
     return MaterialApp(
       title: 'Bunhead Scribble',
       theme: ThemeData(
-        primarySwatch: Colors.pink,
         brightness: _isDarkTheme ? Brightness.dark : Brightness.light,
+
+        scaffoldBackgroundColor: _isDarkTheme ? AppColors.darkBackground : AppColors.lightBackground,
+      
+        primaryColor: _isDarkTheme ? AppColors.darkPrimary : AppColors.lightPrimary,
+
         appBarTheme: AppBarTheme(
-          backgroundColor: _isDarkTheme ? Colors.grey[900] : Colors.pink,
+          backgroundColor: _isDarkTheme ? AppColors.darkAppBar : AppColors.lightAppBar,
+
           foregroundColor: Colors.white,
         ),
-        scaffoldBackgroundColor: _isDarkTheme ? Colors.grey[850] : Colors.white,
+
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: _isDarkTheme ? Colors.grey[900] : Colors.white,
-          selectedItemColor: Colors.pink,
-          unselectedItemColor: Colors.grey,
+          backgroundColor: _isDarkTheme
+            ? AppColors.darkBottomNavBackground
+            : AppColors.lightBottomNavBackground,
+          selectedItemColor: _isDarkTheme
+            ? AppColors.darkBottomNavSelected
+            : AppColors.lightBottomNavSelected,
+          unselectedItemColor: _isDarkTheme
+            ? AppColors.darkBottomNavUnselected
+            : AppColors.lightBottomNavUnselected,
         ),
+
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: _isDarkTheme ? Colors.pinkAccent : Colors.pink,
+            backgroundColor:
+              _isDarkTheme ? AppColors.darkAccent : AppColors.lightAccent,
             foregroundColor: Colors.white,
+          ),
+        ),
+
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(
+            color: _isDarkTheme ? AppColors.darkText : AppColors.lightText,
           ),
         ),
       ),
