@@ -131,7 +131,10 @@ class _ChoreographyPageState extends State<ChoreographyPage> {
               _loadChoreoNotes();
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
             child: Text('Delete'),
           ),
         ],
@@ -142,64 +145,63 @@ class _ChoreographyPageState extends State<ChoreographyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Choreography Notes')),
       body: Padding(
-  padding: const EdgeInsets.all(16.0),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      const Text('Write choreography ideas:', style: TextStyle(fontSize: 20)),
-      const SizedBox(height: 12),
-      TextField(
-        controller: _controller,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Describe steps, sequences, or formations...',
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('Write choreography ideas:', style: TextStyle(fontSize: 20)),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Describe steps, sequences, or formations...',
+            ),
+            maxLines: null,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(onPressed: _addChoreoNote, child: const Text('Save')),
+          const SizedBox(height: 16),
+
+          const Text('Search ballet steps:', style: TextStyle(fontSize: 20)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _searchController,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Type a step name or category...',
+            ),
+            onChanged: _searchSteps,
+          ),
+          const SizedBox(height: 8),
+
+          // Search results section
+          if (_searchResults.isNotEmpty)
+            Expanded(
+              child: _buildSearchResults(),
+            )
+          else
+            const SizedBox.shrink(),
+
+          const SizedBox(height: 12),
+
+          const Text('Your choreography notes:', style: TextStyle(fontSize: 20)),
+          const SizedBox(height: 8),
+          Expanded(child: _buildChoreoNotesList()),
+          ],
         ),
-        maxLines: null,
       ),
-      const SizedBox(height: 12),
-      ElevatedButton(onPressed: _addChoreoNote, child: const Text('Save')),
-      const SizedBox(height: 16),
-
-      const Text('Search ballet steps:', style: TextStyle(fontSize: 20)),
-      const SizedBox(height: 8),
-      TextField(
-        controller: _searchController,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Type a step name or category...',
-        ),
-        onChanged: _searchSteps,
-      ),
-      const SizedBox(height: 8),
-
-      // Search results section
-      if (_searchResults.isNotEmpty)
-        Expanded(
-          child: _buildSearchResults(),
-        )
-      else
-        const SizedBox.shrink(),
-
-      const SizedBox(height: 12),
-
-      const Text('Your choreography notes:', style: TextStyle(fontSize: 20)),
-      const SizedBox(height: 8),
-      Expanded(child: _buildChoreoNotesList()),
-    ],
-  ),
-),
 
     );
   }
 
   Widget _buildChoreoNotesList() {
     if (_choreoNotes.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'No choreography notes yet! Start creating 🩰',
-          style: TextStyle(color: Colors.grey),
+          style: TextStyle(color: Theme.of(context).colorScheme.outline),
         ),
       );
     }
@@ -215,17 +217,26 @@ class _ChoreographyPageState extends State<ChoreographyPage> {
             title: Text(note['content'], style: const TextStyle(fontSize: 16)),
             subtitle: Text(
               note['date'],
-              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.outline,
+                fontSize: 12,
+              ),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.edit, color: Colors.blueAccent),
+                  icon: Icon(
+                    Icons.edit,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                   onPressed: () => _showEditDialog(note),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.redAccent),
+                  icon: Icon(
+                    Icons.delete,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   onPressed: () => _confirmDelete(note['id']),
                 ),
               ],

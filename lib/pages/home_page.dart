@@ -91,9 +91,11 @@ class _HomePageState extends State<HomePage> {
                       future: _dbHelper.getAllTags(),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData) {
-                          return const Padding(
+                          return Padding(
                             padding: EdgeInsets.only(top: 16),
-                            child: CircularProgressIndicator(),
+                            child: CircularProgressIndicator(
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           );
                         }
 
@@ -158,11 +160,13 @@ class _HomePageState extends State<HomePage> {
                                   label: Text(tag),
                                   selected: isSelected,
 
-                                  selectedColor: Colors.pink.shade300,
-                                  backgroundColor: Colors.grey.shade200,
+                                  selectedColor: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                                  backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
                                   checkmarkColor: Colors.white,
                                   labelStyle: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.black,
+                                    color: isSelected
+                                        ? Theme.of(context).colorScheme.onPrimary
+                                        : Theme.of(context).colorScheme.onSurface,
                                   ),
 
                                   onSelected: (value) {
@@ -426,7 +430,6 @@ void _showCombinedFilterDialog() async {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Journal Page')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -499,7 +502,7 @@ void _showCombinedFilterDialog() async {
                                     children: (note['tags'] as List<String>).map((tag) {
                                       return Chip(
                                         label: Text(tag),
-                                        backgroundColor: Colors.pink.shade100,
+                                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
                                       );
                                     }).toList(),
                                   ),
@@ -508,7 +511,10 @@ void _showCombinedFilterDialog() async {
 
                                 Text(
                                   note['date'],
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
@@ -519,14 +525,14 @@ void _showCombinedFilterDialog() async {
                                 IconButton(
                                   icon: Icon(
                                     Icons.edit,
-                                    color: Colors.blueAccent,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                   onPressed: () => _showEditDialog(note),
                                 ),
                                 IconButton(
                                   icon: Icon(
                                     Icons.delete,
-                                    color: Colors.redAccent,
+                                    color: Theme.of(context).colorScheme.error,
                                   ),
                                   onPressed: () => _confirmDelete(note['id']),
                                 ),

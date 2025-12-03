@@ -66,7 +66,6 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Calendar')),
       body: Column(
         children: [
           TableCalendar(
@@ -98,7 +97,10 @@ class _CalendarPageState extends State<CalendarPage> {
                       padding: const EdgeInsets.only(bottom: 1.5),
                       child: Text(
                         "• ${(e?['description'] ?? '').toString()}",
-                        style: const TextStyle(fontSize: 9, color: Colors.black87),
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: Theme.of(context).textTheme.bodyMedium!.color,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     );
@@ -106,13 +108,13 @@ class _CalendarPageState extends State<CalendarPage> {
                 );
               },
             ),
-            calendarStyle: const CalendarStyle(
+            calendarStyle: CalendarStyle(
               todayDecoration: BoxDecoration(
-                color: Colors.pinkAccent,
+                color: Theme.of(context).colorScheme.secondary,
                 shape: BoxShape.circle,
               ),
               selectedDecoration: BoxDecoration(
-                color: Colors.pink,
+                color: Theme.of(context).colorScheme.primary,
                 shape: BoxShape.circle,
               ),
             ),
@@ -155,7 +157,10 @@ class _CalendarPageState extends State<CalendarPage> {
                         child: ListTile(
                           title: Text(event['description']),
                           trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
+                            icon: Icon(
+                              Icons.delete,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                             onPressed: () =>
                                 _deleteEvent(event['id']),
                           ),
